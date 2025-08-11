@@ -29,7 +29,7 @@ if 'sensor_data' not in st.session_state:
 
 # Auto-load ./data/PSF_sensors_all.csv if present
 if st.session_state.sensor_data is None:
-    default_path = Path(__file__).resolve().parent / "data" / "PSF_sensors_all.csv"
+    default_path = Path(__file__).resolve().parent / "data" / "PSF_sensors_all.CSV"
     if default_path.exists():
         df_auto = load_sensor_data(str(default_path))
         if df_auto is not None and not df_auto.empty:
