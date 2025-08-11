@@ -81,24 +81,60 @@ if page == "📈 Dashboard":
         df = st.session_state.sensor_data
 
         # ---- Current Conditions (latest reading) ----
+
+        # ---- Dataset Overview (moved from Analysis) ----
+        st.subheader("📊 Dataset Overview")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("📊 Total Records", f"{len(df):,}")
+        with col2:
+            if 'Temperature' in df.columns:
+                st.metric("🌡️ Avg Temperature", f"{df['Temperature'].mean():.1f}°C")
+            else:
+                st.metric("🌡️ Avg Temperature", "N/A")
+        with col3:
+            if 'Humidity' in df.columns:
+                st.metric("💧 Avg Humidity", f"{df['Humidity'].mean():.1f}%")
+            else:
+                st.metric("💧 Avg Humidity", "N/A")
+        with col4:
+            if 'TVOC' in df.columns:
+                st.metric("🌬️ Avg TVOC", f"{df['TVOC'].mean():.0f} ppb")
+            else:
+                st.metric("🌬️ Avg TVOC", "N/A")
+
+        # ---- Current Conditions (latest reading) ----
         st.subheader("🌡️ Current Conditions (Latest Reading)")
         latest_data = df.iloc[-1]
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            temp_delta = latest_data['Temperature'] - df['Temperature'].mean()
-            st.metric("🌡️ Temperature", f"{latest_data['Temperature']:.1f}°C", delta=f"{temp_delta:.1f}°C")
+            if 'Temperature' in df.columns:
+                temp_delta = latest_data['Temperature'] - df['Temperature'].mean()
+                st.metric("🌡️ Temperature", f"{latest_data['Temperature']:.1f}°C", delta=f"{temp_delta:.1f}°C")
+            else:
+                st.metric("🌡️ Temperature", "N/A")
         with col2:
-            humid_delta = latest_data['Humidity'] - df['Humidity'].mean()
-            st.metric("💧 Humidity", f"{latest_data['Humidity']:.1f}%", delta=f"{humid_delta:.1f}%")
+            if 'Humidity' in df.columns:
+                humid_delta = latest_data['Humidity'] - df['Humidity'].mean()
+                st.metric("💧 Humidity", f"{latest_data['Humidity']:.1f}%", delta=f"{humid_delta:.1f}%")
+            else:
+                st.metric("💧 Humidity", "N/A")
         with col3:
-            pressure_delta = latest_data['Pressure'] - df['Pressure'].mean()
-            st.metric("🌪️ Pressure", f"{latest_data['Pressure']:.1f} hPa", delta=f"{pressure_delta:.1f} hPa")
+            if 'Pressure' in df.columns:
+                pressure_delta = latest_data['Pressure'] - df['Pressure'].mean()
+                st.metric("🌪️ Pressure", f"{latest_data['Pressure']:.1f} hPa", delta=f"{pressure_delta:.1f} hPa")
+            else:
+                st.metric("🌪️ Pressure", "N/A")
         with col4:
             if 'TVOC' in df.columns:
                 tvoc_delta = latest_data['TVOC'] - df['TVOC'].mean()
                 st.metric("🌬️ TVOC", f"{latest_data['TVOC']:.0f} ppb", delta=f"{tvoc_delta:.0f} ppb")
             else:
                 st.metric("🌬️ TVOC", "N/A")
+            
+
+
+
 
         # ---- Multi-parameter overview (uniform style, all available params) ----
         st.subheader("🎛️ Multi-Parameter Overview")
@@ -140,19 +176,6 @@ elif page == "📊 Analysis":
         st.warning("⚠️ Please load data first (go to **Dashboard** and upload a CSV or place a file under `./data/`).")
     else:
         df = st.session_state.sensor_data
-
-        # ---- Overview ----
-        st.subheader("📈 Dataset Overview")
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("📊 Total Records", f"{len(df):,}")
-        with col2:
-            st.metric("🌡️ Avg Temperature", f"{df['Temperature'].mean():.1f}°C")
-        with col3:
-            st.metric("💧 Avg Humidity", f"{df['Humidity'].mean():.1f}%")
-        with col4:
-            st.metric("🌬️ Avg TVOC", f"{df['TVOC'].mean():.0f} ppb" if 'TVOC' in df.columns else "N/A")
-
         # ---- Time series visualization ----
         st.subheader("📉 Time Series Visualization")
         environmental_params = [c for c in ['Temperature', 'Humidity', 'Pressure'] if c in df.columns]
