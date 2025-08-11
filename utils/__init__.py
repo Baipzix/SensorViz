@@ -1,6 +1,3 @@
-# utils package initialization
-# This file makes the utils directory a Python package
-
 from .data_processing import (
     load_sensor_data,
     validate_sensor_data,
@@ -25,7 +22,7 @@ from .visualization import (
 
 __all__ = [
     'load_sensor_data',
-    'validate_sensor_data', 
+    'validate_sensor_data',
     'clean_sensor_data',
     'get_data_summary',
     'detect_anomalies',
