@@ -141,7 +141,7 @@ if page == "📈 Dashboard":
         # Order you prefer; only keep those that exist
         param_order = ['Temperature', 'Humidity', 'Pressure', 'TVOC', 'eCO2', 'RawH2', 'RawEthanol', 'Resistance']
         available_params = [p for p in param_order if p in df.columns]
-        dashboard_fig = create_dashboard_plots(df, params=available_params, ncols=3)
+        dashboard_fig = create_dashboard_plots(df, params=available_params, ncols=2)
         st.plotly_chart(dashboard_fig, use_container_width=True)
 
         # ---- Recent trends ----

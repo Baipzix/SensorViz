@@ -50,13 +50,15 @@ def plot_correlation_matrix(df: pd.DataFrame):
     fig.update_layout(height=500, xaxis_title="Parameters", yaxis_title="Parameters")
     return fig
 
-def create_dashboard_plots(df: pd.DataFrame, params=None, ncols=3):
+def create_dashboard_plots(df: pd.DataFrame, params=None, ncols=3, vertical_spacing=0.22):
     """
-    Build a uniform grid of <param vs time> plots using consistent style.
-    - params: list of column names to plot (order kept). If None, auto-detect numeric columns (excludes 'datetime' index).
-    - ncols: number of columns in the subplot grid.
+    Build a uniform grid of <param vs time> plots with extra vertical space
+    so x-axis labels don't collide with the next row's titles, and format
+    x ticks to show time only (no date).
     """
     time_col = 'datetime' if 'datetime' in df.columns else 'Time'
+    is_datetime = np.issubdtype(df[time_col].dtype, np.datetime64) if time_col in df.columns else False
+
     if params is None or len(params) == 0:
         params = [c for c in df.select_dtypes(include='number').columns if c != 'datetime']
 
@@ -67,16 +69,27 @@ def create_dashboard_plots(df: pd.DataFrame, params=None, ncols=3):
         return fig
 
     nrows = (n + ncols - 1) // ncols
-    fig = make_subplots(rows=nrows, cols=ncols, subplot_titles=params, vertical_spacing=0.12, horizontal_spacing=0.07)
 
-    # consistent line style; rotate through a palette
-    palette = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F', '#BAB0AC']
+    fig = make_subplots(
+        rows=nrows,
+        cols=ncols,
+        subplot_titles=params,
+        vertical_spacing=vertical_spacing,  # more open rows
+        horizontal_spacing=0.07
+    )
 
+    # consistent style
+    palette = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F',
+               '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F', '#BAB0AC']
+
+    # Build traces
     for i, p in enumerate(params):
         r = (i // ncols) + 1
         c = (i % ncols) + 1
         if p in df.columns:
             color = palette[i % len(palette)]
+            # Hover shows time only (if datetime)
+            hover_x = "%{x|%H:%M:%S}" if is_datetime else "%{x}"
             fig.add_trace(
                 go.Scatter(
                     x=df[time_col],
@@ -85,23 +98,38 @@ def create_dashboard_plots(df: pd.DataFrame, params=None, ncols=3):
                     name=p,
                     line=dict(color=color, width=2),
                     showlegend=False,
-                    hovertemplate=f"<b>{p}</b><br>Time: %{{x}}<br>Value: %{{y:.2f}}<extra></extra>"
+                    hovertemplate=f"<b>{p}</b><br>Time: {hover_x}<br>Value: %{{y:.2f}}<extra></extra>"
                 ),
                 row=r, col=c
             )
 
-    fig.update_layout(
-        height=max(400, nrows * 260),
-        title_text="Environmental & Gas Sensor Parameters Overview",
-        title_x=0.5,
-        title_font_size=16
-    )
-    # uniform axes titles
+    # Time-only ticks + axis titles
     for i in range(nrows * ncols):
         r = (i // ncols) + 1
         c = (i % ncols) + 1
-        fig.update_xaxes(title_text="Time", row=r, col=c)
+        # Hide date part on datetime axes; for string Time, this is ignored gracefully
+        fig.update_xaxes(
+            title_text="Time",
+            tickformat="%H:%M:%S" if is_datetime else None,
+            title_standoff=6,     # keep title closer to ticks to reduce overlap
+            row=r, col=c
+        )
         fig.update_yaxes(title_text="Value", row=r, col=c)
+
+    # Make subplot titles sit a bit higher to avoid crowding
+    for ann in fig.layout.annotations:
+        ann.font.size = 12
+        ann.yshift = 10
+
+    # Taller figure so rows are "more open"
+    row_height = 290  # px per row (tweak as you like)
+    fig.update_layout(
+        height=max(420, nrows * row_height),
+        title_text="Environmental & Gas Sensor Parameters Overview",
+        title_x=0.5,
+        title_font_size=16,
+        margin=dict(t=60, b=30, l=10, r=10)
+    )
 
     return fig
 
